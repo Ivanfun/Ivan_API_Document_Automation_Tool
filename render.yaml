@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ivan-api-generator
+    name: Ivan_API_Document_Automation_Tool
     env: python
     buildCommand: ""
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port 10000
