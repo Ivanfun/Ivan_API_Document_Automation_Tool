@@ -2,43 +2,38 @@ services:
   - type: web
     name: ivan-api-generator
     env: python
-    # 修改 buildCommand 來安裝必要的 ODBC 驅動
+    # 這裡才是關鍵！添加安裝 ODBC 驅動的命令
     buildCommand: |
       # 更新 apt 套件列表
-      apt-get update -y
+      sudo apt-get update -y
       # 安裝 unixODBC-dev，這是 pyodbc 的依賴，也是 ODBC 驅動管理器
-      apt-get install -y unixodbc-dev
+      sudo apt-get install -y unixodbc-dev
       
       # 以下步驟用於安裝 Microsoft SQL Server ODBC Driver 18
-      # 參考 Microsoft 官方文件：https://learn.microsoft.com/zh-tw/sql/connect/odbc/linux-mac/install-odbc-driver-linux?view=sql-server-ver16#ubuntu
+      # 這是從 Microsoft 官方文件：https://learn.microsoft.com/zh-tw/sql/connect/odbc/linux-mac/install-odbc-driver-linux?view=sql-server-ver16#ubuntu 獲取
+      # 並針對 Render 的可能環境進行調整
       
       # 匯入 Microsoft GPG 金鑰 (用於驗證套件)
+      # 注意：gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg 是較新 Ubuntu 推薦的方式
       curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg
       
       # 添加 Microsoft SQL Server 套件儲存庫
-      # 這裡假設 Render 環境是 Ubuntu 22.04 (Jammy Jellyfish)。
-      # 如果 Render 使用的是其他版本 (例如 Ubuntu 20.04 Focal Fossa)，您需要將 'jammy' 替換為 'focal'。
-      # 請查閱 Render 環境的 Linux 版本資訊，或嘗試兩種都試試。
-      echo "deb [arch=amd64,trusted=yes] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" > /etc/apt/sources.list.d/mssql-release.list
+      # Render 預設使用 Ubuntu 22.04 (Jammy Jellyfish)。
+      # 如果部署時出現錯誤，可以嘗試將 'jammy' 替換為 'focal' (Ubuntu 20.04)
+      echo "deb [arch=amd64,signed-by=/etc/apt/trusted.gpg.d/microsoft.gpg] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
       
       # 再次更新套件列表以包含新的儲存庫
-      apt-get update -y
+      sudo apt-get update -y
       
       # 安裝 ODBC Driver 18 for SQL Server (接受 EULA)
-      ACCEPT_EULA=Y apt-get install -y msodbcsql18
+      ACCEPT_EULA=Y sudo apt-get install -y msodbcsql18
       
-      # (可選) 安裝 SQL Server 命令列工具，如果您有用到類似 sqlcmd, bcp 等工具
-      # ACCEPT_EULA=Y apt-get install -y mssql-tools18
-      
-      # 配置 ODBC 驅動管理器
-      # 確保驅動管理器知道 msodbcsql18 驅動的位置。
-      # 這些檔案在安裝 msodbcsql18 時應該已經被建立，但我們確保它們是存在的。
-      # Render 的環境通常會自動處理這個，但手動檢查以防萬一。
-      
-      # 執行 Python 依賴安裝
+      # 安裝 Python 依賴
       pip install -r requirements.txt
-    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT # 修改為 $PORT
+    
+    # 確保這裡使用 $PORT，這是 Render 推薦的做法
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     plan: free
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10
+        value: 3.10 # 您也可以考慮使用更高的 Python 版本，例如 3.9, 3.10 或 3.11
