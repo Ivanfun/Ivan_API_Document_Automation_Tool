@@ -2,7 +2,17 @@ services:
   - type: web
     name: ivan-api-generator
     env: python
-    buildCommand: ""
+    # 確保這裡是單行字串，使用 | 可以換行
+    buildCommand: |
+      apt-get update
+      apt-get install -y unixodbc-dev
+      # For Microsoft SQL Server ODBC Driver 17 or 18
+      curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+      curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | tee /etc/apt/sources.list.d/mssql-release.list
+      apt-get update
+      ACCEPT_EULA=Y apt-get install -y msodbcsql18
+      ACCEPT_EULA=Y apt-get install -y mssql-tools18
+      pip install -r requirements.txt
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     plan: free
     envVars:
