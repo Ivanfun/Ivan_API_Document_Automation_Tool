@@ -73,7 +73,7 @@ def generate_api_doc(sql_connection_params: dict, word_template_path: Path, outp
     try:
         # 構建 ODBC 連線字串
         conn_str = (
-            f'DRIVER={{ODBC Driver 18 for SQL Server}};' # 指定 ODBC 驅動程式
+            f'DRIVER={{ODBC Driver 17 for SQL Server}};' # 指定 ODBC 驅動程式
             f'SERVER={server};'                         # 伺服器地址
             f'DATABASE={database};'                     # 資料庫名稱
             f'UID={username};'                          # 使用者名稱
