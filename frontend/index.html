@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"> <head>
+  <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>API 規格書產生器</title> <script src="https://cdn.tailwindcss.com"></script> <style>
+    /* 引入 Google Fonts 的 Noto Sans TC (思源黑體繁體中文) */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Noto Sans TC', sans-serif; /* 設定頁面字體 */
+      background-color: #f0f4f8; /* 設定背景顏色 */
+    }
+    .file-input {
+      display: none; /* 隱藏原生的檔案選擇輸入框 */
+    }
+    .progress-bar {
+      transition: width 0.3s ease; /* 進度條寬度變化的過渡效果 */
+    }
+    .animate-bounce-slow {
+      animation: bounce 1.5s infinite; /* 定義慢速彈跳動畫 */
+    }
+    /* 定義彈跳動畫的關鍵影格 */
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(-5%); /* 初始和結束時向上移動 5% */
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1); /* 動畫時間函數 */
+      }
+      50% {
+        transform: translateY(0); /* 中間時回到原位 */
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1); /* 動畫時間函數 */
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen py-8 px-4 sm:px-6">
+  <div class="max-w-3xl mx-auto"> <div class="bg-white rounded-xl shadow-lg overflow-hidden"> <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-8 text-white"> <div class="flex items-center justify-center space-x-3">
+          <div class="text-4xl animate-bounce-slow">📄</div> <h1 class="text-2xl sm:text-3xl font-bold">API 規格書產生器</h1> </div>
+        <p class="mt-2 text-center text-blue-100">上傳必要檔案，快速產生標準化 API 文件</p> </div>
+      <div class="p-6 sm:p-8"> <form id="uploadForm" class="space-y-6"> <div class="bg-green-50 p-4 rounded-lg border border-green-100"> <label class="block text-lg font-medium text-green-800 mb-3">
+              <span class="flex items-center">
+                <span class="text-xl mr-2">⚙️</span> 資料庫連線設定
+              </span>
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4"> <div>
+                <label for="server" class="block text-sm font-medium text-gray-700">伺服器 (Server)</label>
+                <input type="text" id="server" name="server" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" required> </div>
+              <div>
+                <label for="database" class="block text-sm font-medium text-gray-700">資料庫 (Database)</label>
+                <input type="text" id="database" name="database" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" required> </div>
+              <div>
+                <label for="username" class="block text-sm font-medium text-gray-700">使用者名稱 (Username)</label>
+                <input type="text" id="username" name="username" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" required> </div>
+              <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">密碼 (Password)</label>
+                <input type="password" id="password" name="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" required> </div>
+            </div>
+          </div>
+          <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100"> <label class="block text-lg font-medium text-indigo-800 mb-3" for="template">
+              <span class="flex items-center">
+                <span class="text-xl mr-2">📄</span> 上傳 Word 範本
+              </span>
+            </label>
+            <div class="flex items-center">
+              <label for="template" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md cursor-pointer">
+                選擇檔案
+              </label>
+              <span id="template-name" class="ml-3 text-sm text-gray-600 truncate">尚未選擇檔案</span> <input type="file" id="template" class="file-input" name="word_template" accept=".docx" required> </div>
+            <p class="mt-2 text-xs text-gray-500">支援 .docx 格式</p> </div>
+
+          <div class="bg-purple-50 p-4 rounded-lg border border-purple-100"> <label class="block text-lg font-medium text-purple-800 mb-3" for="sql">
+              <span class="flex items-center">
+                <span class="text-xl mr-2">📁</span> 上傳 SQL 設定檔
+              </span>
+            </label>
+            <div class="flex items-center">
+              <label for="sql" class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-md cursor-pointer">
+                選擇檔案
+              </label>
+              <span id="sql-name" class="ml-3 text-sm text-gray-600 truncate">尚未選擇檔案</span> <input type="file" id="sql" class="file-input" name="sql_properties" accept=".properties" required> </div>
+            <p class="mt-2 text-xs text-gray-500">支援 .properties 格式</p> </div>
+
+          <div class="flex justify-center pt-4"> <button type="submit" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white text-lg font-semibold rounded-lg shadow-md hover:from-blue-700 hover:to-blue-900 transition duration-300">
+              產生 API 規格書
+            </button>
+          </div>
+        </form>
+
+        <div id="processing" class="mt-8 hidden"> <div class="text-center mb-4">
+            <div class="inline-block p-4 bg-blue-100 rounded-full animate-spin text-blue-600">⏳</div> <h3 class="mt-2 text-lg font-medium text-gray-900">處理中，請稍候...</h3>
+            <p class="mt-1 text-sm text-gray-500">正在產生您的 API 規格書</p>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div id="progress-bar" class="progress-bar bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div> </div>
+        </div>
+
+        <div id="result" class="mt-8 hidden"> <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">✅</div> <div class="ml-3">
+                <h3 class="text-sm font-medium text-green-800">產生成功！</h3>
+                <p class="mt-2 text-sm text-green-700">您的 API 規格書已準備就緒，請點擊下方按鈕下載。</p>
+                <div class="mt-4">
+                  <a id="download-link" href="#" class="bg-green-600 px-4 py-2 rounded-md text-sm font-medium text-white hover:bg-green-700 transition">下載文件</a> </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="error" class="mt-8 hidden"> <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">❌</div> <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">處理失敗</h3>
+                <p id="error-message" class="mt-2 text-sm text-red-700">產生失敗，請確認檔案格式或資料庫連線資訊是否正確。</p> 
+                <div class="mt-4">
+                  <button id="try-again" type="button" class="bg-red-600 px-4 py-2 rounded-md text-sm font-medium text-white hover:bg-red-700 transition">重新嘗試</button> </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 text-center text-sm text-gray-500"> <p>© 2025 API 規格書產生器 ｜ 版本 1.0.1</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 顯示檔案名稱的 JavaScript 邏輯
+    const fileInputs = ['template', 'sql']; // 定義檔案輸入框的 ID
+    fileInputs.forEach(id => {
+      document.getElementById(id).addEventListener('change', function () {
+        const file = this.files[0]; // 獲取選中的檔案
+        document.getElementById(`${id}-name`).textContent = file ? file.name : '尚未選擇檔案'; // 顯示檔名或預設文字
+      });
+    });
+
+    // 獲取各個 DOM 元素的引用
+    const form = document.getElementById('uploadForm');
+    const processing = document.getElementById('processing');
+    const result = document.getElementById('result');
+    const error = document.getElementById('error');
+    const progressBar = document.getElementById('progress-bar');
+    const downloadLink = document.getElementById('download-link');
+    const errorMessage = document.getElementById('error-message'); // 錯誤訊息元素
+    const tryAgainBtn = document.getElementById('try-again');
+
+    // 輔助函數：重置檔案輸入框的顯示和值
+    function resetFileInputs() {
+      fileInputs.forEach(id => {
+        document.getElementById(`${id}-name`).textContent = '尚未選擇檔案'; // 重置顯示文字
+        document.getElementById(id).value = ''; // 清空檔案輸入框的值
+      });
+    }
+
+    // 監聽表單提交事件
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); // 阻止表單的預設提交行為
+      
+      // 隱藏表單，顯示處理中介面
+      form.classList.add('hidden');
+      processing.classList.remove('hidden');
+      result.classList.add('hidden');
+      error.classList.add('hidden');
+      progressBar.style.width = '0%'; // 重置進度條
+
+      let progress = 0;
+      // 模擬進度條的計時器，每 500 毫秒更新一次
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 15; // 隨機增加進度
+        if (progress > 90) progress = 90; // 避免進度超過 90%，因為要等後端響應
+        progressBar.style.width = `${progress}%`; // 更新進度條寬度
+      }, 500);
+
+      const formData = new FormData(form); // 創建 FormData 物件，用於發送表單數據
+
+      try {
+        // 模擬網路延遲，讓進度條動畫更流暢
+        await new Promise(resolve => setTimeout(resolve, 1000)); 
+        
+        // 發送 POST 請求到後端 /upload/ 端點
+        const response = await fetch('/upload/', {
+          method: 'POST',
+          body: formData // 將表單數據作為請求體
+        });
+
+        clearInterval(progressInterval); // 清除進度條計時器
+        progressBar.style.width = '100%'; // 將進度條設置為 100%
+        await new Promise(resolve => setTimeout(resolve, 500)); // 讓進度條保持 100% 一段時間
+
+        if (!response.ok) { // 如果 HTTP 響應狀態碼不是 2xx (表示失敗)
+            // 不再嘗試解析後端詳細錯誤訊息
+            // 而是直接拋出一個帶有固定訊息的錯誤
+            throw new Error('產生失敗，請確認檔案格式或資料庫連線資訊是否正確。');
+        }
+
+        const blob = await response.blob(); // 獲取響應的 Blob (二進位文件)
+        const url = window.URL.createObjectURL(blob); // 創建一個 Blob URL
+        downloadLink.href = url; // 將 Blob URL 設定為下載連結的 href
+        downloadLink.download = 'API規格書.docx'; // 設定下載時的檔名
+        
+        processing.classList.add('hidden'); // 隱藏處理中介面
+        result.classList.remove('hidden'); // 顯示成功結果介面
+      } catch (err) {
+        clearInterval(progressInterval); // 清除進度條計時器
+        // 無論錯誤內容為何，都將 errorMessage 的內容設定為固定的提示
+        errorMessage.textContent = '產生失敗，請確認檔案格式或資料庫連線資訊是否正確。';
+        processing.classList.add('hidden'); // 隱藏處理中介面
+        error.classList.remove('hidden'); // 顯示錯誤訊息介面
+      }
+    });
+
+    // 監聽「重新嘗試」按鈕的點擊事件
+    tryAgainBtn.addEventListener('click', () => {
+      error.classList.add('hidden'); // 隱藏錯誤介面
+      form.classList.remove('hidden'); // 顯示表單
+      form.reset(); // 重置表單的所有欄位
+      resetFileInputs(); // 清空檔案輸入框的顯示名稱
+      progressBar.style.width = '0%'; // 重置進度條
+    });
+
+    // 下載連結通常不需要額外的 click 事件監聽器，瀏覽器會自動處理 href 和 download 屬性
+  </script>
+</body>
+</html>
