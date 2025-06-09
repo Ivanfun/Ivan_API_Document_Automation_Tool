@@ -1,4 +1,4 @@
 services: 
   - type: web 
-    name: ivan-api-generator 
+    name: Ivan_API_Document_Automation_Tool
     plan: free 
